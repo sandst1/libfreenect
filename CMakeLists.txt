@@ -48,11 +48,12 @@ set (PROJECT_VER
 set (PROJECT_APIVER 
   "${PROJECT_VER_MAJOR}.${PROJECT_VER_MINOR}")
 
+OPTION(BUILD_OPENCV_TRACKING "Build OpenCV tracking" ON)
 OPTION(BUILD_EXAMPLES "Build example programs" ON)
 OPTION(BUILD_FAKENECT "Build fakenect mock library" ON)
 OPTION(BUILD_C_SYNC "Build c synchronous library" ON)
 OPTION(BUILD_CPP "Build C++ Library (currently header only)" ON)
-OPTION(BUILD_CV "Build OpenCV wrapper" OFF)
+OPTION(BUILD_CV "Build OpenCV wrapper" ON)
 OPTION(BUILD_AS3_SERVER "Build the Actionscript 3 Server Example" OFF)
 OPTION(BUILD_PYTHON "Build Python extension" OFF)
 IF(PROJECT_OS_LINUX)
@@ -107,6 +108,10 @@ endif()
 
 # Add library project
 add_subdirectory (src)
+
+IF(BUILD_OPENCV_TRACKING)
+  add_subdirectory (opencv_tracking)
+ENDIF()
 
 # Add examples
 IF(BUILD_EXAMPLES)
