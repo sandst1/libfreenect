@@ -1,19 +1,28 @@
 #include "optflow.h"
 
+#include "cv.h"
 #include <highgui.h>
+
+#include "hist_segment.h"
 
 static CvMat* optflow_prev = NULL;
 static CvMat* optflow_velx = NULL;
 static CvMat* optflow_vely = NULL;
 
+#define BLOCK_SIZE cvSize(8,8)
+#define SHIFT_SIZE cvSize(2,2)
+#define MAX_RANGE  cvSize(4,4)
+
 void optflow_init(CvSize size)
 {
     optflow_prev = cvCreateMat(size.height, size.width, CV_8UC1);
-    optflow_velx = cvCreateMat(size.height, size.width, CV_32F);
-    optflow_vely = cvCreateMat(size.height, size.width, CV_32F);
+    CvSize velsize = cvSize((size.width - BLOCK_SIZE.width)/SHIFT_SIZE.width,
+                            (size.height-BLOCK_SIZE.height)/SHIFT_SIZE.width);
 
-    cvNamedWindow("optflow_velx", CV_WINDOW_NORMAL);
-    cvNamedWindow("optflow_vely", CV_WINDOW_NORMAL);
+    optflow_velx = cvCreateMat(velsize.height, velsize.width, CV_32F);
+    optflow_vely = cvCreateMat(velsize.height, velsize.width, CV_32F);
+
+    cvNamedWindow("optflow", CV_WINDOW_NORMAL);
 }
 
 void optflow_deinit()
@@ -21,9 +30,7 @@ void optflow_deinit()
     cvReleaseMat(&optflow_prev);
     cvReleaseMat(&optflow_velx);
     cvReleaseMat(&optflow_vely);
-
-    cvDestroyWindow("optflow_velx");
-    cvDestroyWindow("optflow_vely");
+    cvDestroyWindow("optflow");
 }
 
 void optflow_calculate(CvMat* input, CvMat* output)
@@ -31,12 +38,10 @@ void optflow_calculate(CvMat* input, CvMat* output)
     cvZero(optflow_velx);
     cvZero(optflow_vely);
 
-    // void cvCalcOpticalFlowHS(const CvArr* prev, const CvArr* curr, int usePrevious, CvArr* velx, CvArr* vely, double lambda, CvTermCriteria criteria)
+    cvCalcOpticalFlowBM(optflow_prev, input, BLOCK_SIZE, SHIFT_SIZE, MAX_RANGE, 0, optflow_velx, optflow_vely);
 
-    cvCalcOpticalFlowHS(optflow_prev, input, 0, optflow_velx, optflow_vely, 0.1, cvTermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, .3 ));
+    cvShowImage("optflow", optflow_velx);
 
-    cvShowImage("optflow_velx", optflow_velx);
-    cvShowImage("optflow_vely", optflow_vely);
 
     // Take the current frame into optflow_prev
     cvCopy(input, optflow_prev, NULL);

@@ -16,7 +16,7 @@ if (BUILD_OPENCV_TRACKING)
 	find_package( OpenCV REQUIRED )
 	include_directories(${OpenCV_INCLUDE_DIRS})
 
-	add_executable( opencv_tracking opencv_tracking.c hist_segment.c)
+	add_executable( opencv_tracking opencv_tracking.c hist_segment.c feature_extract.c optflow.c)
         target_link_libraries(opencv_tracking freenect ${OpenGL_LIBRARIES} ${GLUT_LIBRARY} ${OpenCV_LIBS} m)
         install (TARGETS opencv_tracking
                  DESTINATION bin)

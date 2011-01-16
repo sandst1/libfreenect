@@ -35,6 +35,8 @@
 #include <highgui.h>
 
 #include "hist_segment.h"
+#include "feature_extract.h"
+#include "optflow.h"
 
 volatile int die = 0;
 
@@ -158,7 +160,11 @@ int main(int argc, char **argv)
     CvMemStorage* memStorage = cvCreateMemStorage(0);
     IplImage* contour_image = cvCreateImage(cvSize(640,480), 8, 1);
 
-    hist_segment_init();
+
+    //hist_segment_init();
+    //feature_extract_init();
+
+    optflow_init(cvSize(640,480));
 
 	while (!die)
 	{
@@ -167,11 +173,10 @@ int main(int argc, char **argv)
         // 120 ~ 2.7 m
         cvThreshold( cv_depth_threshold_mat, cv_depth_threshold_mat, 120.0, 120.0, CV_THRESH_TOZERO_INV);
 
-
         //cvThreshold( cv_depth_threshold_mat, cv_depth_threshold_mat, 120.0, 255.0, CV_THRESH_BINARY_INV);
 
         // Find contours
-        cvClearMemStorage(memStorage);
+        /*cvClearMemStorage(memStorage);
         cvFindContours( cv_depth_threshold_mat, memStorage, &contours, sizeof(CvContour), CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0));
         cvZero(contour_image);
 
@@ -180,21 +185,27 @@ int main(int argc, char **argv)
         {
             cvDrawContours(contour_image, contours, cvScalarAll(255.0), cvScalarAll(255.0), 1, 1, 8, cvPoint(0,0));
         }
+        cvShowImage("contourWin",contour_image);*/
 
-        cvShowImage("contourWin",contour_image);
+        //extractFeatures(cv_depth_threshold_mat);
+        //hist_segment(cv_depth_threshold_mat, NULL);
+        optflow_calculate(cv_depth_threshold_mat, NULL);
 
-        hist_segment(cv_depth_threshold_mat, NULL);
 
         cvShowImage("rgb", cv_rgb_mat);
 
 		cvShowImage("depth_th", cv_depth_threshold_mat);
+
 
         char k = cvWaitKey(5);
         if( k == 27 ) break;
 
     }
 
-    hist_segment_deinit();
+    optflow_deinit();
+    //hist_segment_deinit();
+    //feature_extract_deinit();
+
 
 	printf("-- done!\n");
 
@@ -209,7 +220,6 @@ int main(int argc, char **argv)
 
     // Release Contour variables
     cvDestroyWindow("contourWin");
-
 
 	pthread_join(freenect_thread, NULL);
 	pthread_exit(NULL);
